@@ -1,0 +1,66 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "io.qameta.allure:allure-gradle:2.3"
+    }
+}
+
+apply plugin: "java"
+apply plugin: "io.qameta.allure"
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    implementation 'org.seleniumhq.selenium:selenium-java:4.5.0'
+    runtimeOnly 'org.aspectj:aspectjweaver:1.9.9.1'
+    //Cucumber
+    testImplementation 'io.cucumber:cucumber-junit:7.8.1'
+    testImplementation 'io.cucumber:cucumber-java:7.8.1'
+    // Allure
+    implementation 'io.qameta.allure:allure-cucumber7-jvm:2.19.0'
+    runtimeOnly 'org.aspectj:aspectjweaver:1.9.7'
+    implementation group: 'io.qameta.allure', name: 'allure-cucumber7-jvm', version: '2.17.3'
+
+}
+
+test {
+    useJUnitPlatform()
+}
+
+configurations {
+    cucumberRuntime {
+        extendsFrom testImplementation
+    }
+}
+
+task cucumber() {
+    dependsOn assemble, testClasses
+    doLast {
+        javaexec {
+            main = "io.cucumber.core.cli.Main"
+            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+            args = [
+                    '--plugin', 'html:results.html',
+                    '--plugin', 'pretty',
+                    '--plugin', 'io.qameta.allure.cucumber7jvm.AllureCucumber7Jvm',
+                    '--glue', 'runner', 'src/test/resources/features',
+                    '--tags',  '@ValidOptionsToSelectAFlight'
+            ]
+        }
+    }
+}
+allure{
+    version = "2.2.1"
+    autoconfigure = true
+    aspectjweaver = true
+}
+
